@@ -9,6 +9,10 @@ router.post('/user/signup', async (req, res) => {
     try {
         const { name, email, password, number } = req.body
 
+        if (number.length < 10) {
+            return res.status(400).json({ error: "Number Should Not Less than 10 Digit" })
+        }
+
         const isUserAlreadyExist = await UserCollection.findOne({ email })
         if (isUserAlreadyExist && isUserAlreadyExist.isEmailVerified) {
             return res.status(401).json({ error: "User Already Exist Please Signin" })
