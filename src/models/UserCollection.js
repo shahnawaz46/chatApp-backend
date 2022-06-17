@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        require: true
+        require: true,
+        unique: true
     },
     number: {
         type: Number,
@@ -30,10 +31,12 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    socketId: {
-        type: String,
-        default: null
-    }
+    friends: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'user'
+        }
+    ]
 
 }, { timestamps: true })
 
