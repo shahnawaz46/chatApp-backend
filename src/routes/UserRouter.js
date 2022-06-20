@@ -1,9 +1,5 @@
 const router = require('express').Router();
-const UserCollection = require('../models/UserCollection');
-const OtpCollection = require('../models/OtpCollection');
-// const { transporter } = require('../utils/SendMail');
-const upload = require('../middleware/MulterMiddleware');
-const { userSignup, userLogin, optVerfication } = require('../controller/UserController');
+const { userSignup, userLogin, optVerfication, getLoginUserAndAllUser, searchUser } = require('../controller/UserController');
 
 
 router.post('/user/signup', userSignup)
@@ -11,6 +7,10 @@ router.post('/user/signup', userSignup)
 router.post('/user/signin', userLogin)
 
 router.post('/user/otp/verification', optVerfication)
+
+router.get('/user/get/:id', getLoginUserAndAllUser)
+
+router.post('/user/search', searchUser)
 
 // router.post('/user/profile/update', upload.single('profileImage'), async (req, res) => {
 //     try {

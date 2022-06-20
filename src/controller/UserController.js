@@ -60,10 +60,7 @@ exports.userLogin = async (req, res) => {
             return res.status(401).json({ error: "Invalid Credential" })
         }
 
-        const userDoc = isUserAlreadyExist._doc
-        delete userDoc.password
-
-        return res.status(200).json({ message: "Login Successfully", user: userDoc })
+        return res.status(200).json({ message: "Login Successfully", userId: isUserAlreadyExist._id })
 
     } catch (err) {
         // console.log(err)
@@ -100,15 +97,40 @@ exports.optVerfication = async (req, res) => {
 
         await OtpCollection.findByIdAndDelete(isOtpAvailable._id)
 
-        const userDoc = isUserExist._doc
-        delete userDoc.password
-
         sendMail({ email: isUserExist.email, subject: "Gmail Verified Successfully", text: afterMailVerifiedTemplate("Welcome to the Global Chat Platform, Start Chatting With your friends and make new friends, Thanks.") })
 
-        return res.status(200).json({ message: "Gmail Verified Successfully", user: userDoc })
+        return res.status(200).json({ message: "Gmail Verified Successfully", userId: isUserExist._id })
 
     } catch (err) {
         // console.log("OTP Verification Error : ", err)
         return res.status(500).json({ error: "Internal Server Error", err })
     }
+}
+
+exports.getLoginUserAndAllUser = async (req, res) => {
+    try {
+        let loginUser = await UserCollection.findById(req.params.id).select('name image friends number about notifications').populate('friends', 'name image number about')
+
+        return res.status(200).json({ loginUser })
+
+    } catch (err) {
+        // console.log(err)
+        return res.status(500).json({ error: "Internal Server Error", err })
+    }
+}
+
+
+exports.searchUser = async (req, res) => {
+    try {
+        const { query, id, friends } = req.body
+
+        // $ne stand for not equal and $nin stand for not in array 
+        const allSearchUser = await UserCollection.find({ name: { $regex: query }, $or: [{ _id: { $ne: id, $nin: friends } }] }).select('name image number about')
+        return res.status(200).json({ allSearchUser })
+
+    } catch (err) {
+        // console.log(err);
+        return res.status(500).json({ error: "Internal Server Error", err })
+    }
+
 }

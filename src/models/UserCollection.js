@@ -34,7 +34,16 @@ const userSchema = new mongoose.Schema({
     friends: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'user'
+            ref: 'users'
+        }
+    ],
+    notifications: [
+        {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'users'
+            },
+            message: { type: String }
         }
     ]
 
