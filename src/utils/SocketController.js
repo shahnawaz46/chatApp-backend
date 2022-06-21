@@ -1,11 +1,34 @@
 const UserCollection = require("../models/UserCollection")
 
+
+exports.getLoginUserData = async (userId) => {
+    try {
+        let loginUser = await UserCollection.findById(userId).select('name image friends number about notifications online').populate('friends', 'name image number about online')
+
+        return loginUser
+
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+
+exports.userLogout = async (userId) => {
+    try {
+        const logoutUser = await UserCollection.findByIdAndUpdate(userId, { $set: { online: false } }).select('friends').populate('friends', 'name image number about online')
+        return logoutUser
+
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 exports.upadateNotificationInUserCollection = async (request, operation) => {
     try {
         // console.log(operation);
         const user = await UserCollection.findByIdAndUpdate(request.receiverId, {
             [operation]: { 'notifications': { userId: request.senderId, message: request.message } }
-        }, { new: true }).select('name image friends number about notifications').populate('friends', 'name image number about')
+        }, { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
 
         // console.log(user);
         return user
@@ -23,7 +46,7 @@ exports.addFriendInUserCollection = async (bothIds) => {
         // note : it will not work on object of array
         const sender = await UserCollection.findByIdAndUpdate(bothIds.senderId, {
             $addToSet: { 'friends': bothIds.receiverId }
-        }, { new: true }).select('name image friends number about notifications').populate('friends', 'name image number about')
+        }, { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
 
         let receiver = await UserCollection.findByIdAndUpdate(bothIds.receiverId,
             { $addToSet: { 'friends': bothIds.senderId } },
@@ -31,8 +54,7 @@ exports.addFriendInUserCollection = async (bothIds) => {
 
         receiver = await UserCollection.findByIdAndUpdate(bothIds.receiverId, {
             $pull: { 'notifications': { userId: bothIds.senderId } }
-        }, { new: true }).select('name image friends number about notifications').populate('friends', 'name image number about')
-
+        }, { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
 
         // console.log(sender, receiver);
         return { sender, receiver }

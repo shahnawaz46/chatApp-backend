@@ -60,6 +60,9 @@ exports.userLogin = async (req, res) => {
             return res.status(401).json({ error: "Invalid Credential" })
         }
 
+        isUserAlreadyExist.online = true
+        await isUserAlreadyExist.save()
+
         return res.status(200).json({ message: "Login Successfully", userId: isUserAlreadyExist._id })
 
     } catch (err) {
@@ -93,6 +96,7 @@ exports.optVerfication = async (req, res) => {
         }
 
         isUserExist.isEmailVerified = true
+        isUserExist.online = true
         await isUserExist.save()
 
         await OtpCollection.findByIdAndDelete(isOtpAvailable._id)
@@ -107,25 +111,13 @@ exports.optVerfication = async (req, res) => {
     }
 }
 
-exports.getLoginUserAndAllUser = async (req, res) => {
-    try {
-        let loginUser = await UserCollection.findById(req.params.id).select('name image friends number about notifications').populate('friends', 'name image number about')
-
-        return res.status(200).json({ loginUser })
-
-    } catch (err) {
-        // console.log(err)
-        return res.status(500).json({ error: "Internal Server Error", err })
-    }
-}
-
 
 exports.searchUser = async (req, res) => {
     try {
         const { query, id, friends } = req.body
 
         // $ne stand for not equal and $nin stand for not in array 
-        const allSearchUser = await UserCollection.find({ name: { $regex: query }, $or: [{ _id: { $ne: id, $nin: friends } }] }).select('name image number about')
+        const allSearchUser = await UserCollection.find({ name: { $regex: query }, $or: [{ _id: { $ne: id, $nin: friends } }] }).select('name image number about notifications')
         return res.status(200).json({ allSearchUser })
 
     } catch (err) {

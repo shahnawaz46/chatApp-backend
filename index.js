@@ -3,7 +3,7 @@ require("./src/database/Connection")();
 const dotenv = require("dotenv");
 const cors = require("cors");
 const userRouter = require('./src/routes/UserRouter');
-const { upadateNotificationInUserCollection, addFriendInUserCollection } = require('./src/utils/SocketController');
+const { upadateNotificationInUserCollection, addFriendInUserCollection, getLoginUserData, userLogout } = require('./src/utils/SocketController');
 
 // socket io
 const socket = require("socket.io");
@@ -52,9 +52,31 @@ io.on("connection", (socket) => {
         }
     })
 
-    socket.on("online_user", (userId) => {
+    socket.on("online_user", async (userId) => {
         // console.log(`${socket.id} online`);
         allOnlineUser[userId] = socket.id
+
+        const onlineUser = await getLoginUserData(userId)
+        io.to(allOnlineUser[userId]).emit("user_online", onlineUser)
+
+        onlineUser.friends.forEach(async (friend) => {
+            if (friend.online) {
+                const onlineUser = await getLoginUserData(friend._id)
+                io.to(allOnlineUser[friend._id]).emit("user_online", onlineUser)
+            }
+        })
+    })
+
+    socket.on("offline_user", async (userId) => {
+        const offlineUser = await userLogout(userId)
+        // console.log(offlineUser);
+
+        offlineUser.friends.forEach(async (friend) => {
+            if (friend.online) {
+                const onlineUser = await getLoginUserData(friend._id)
+                io.to(allOnlineUser[friend._id]).emit("user_online", onlineUser)
+            }
+        })
     })
 
     socket.on("friend_request_send", async (request) => {

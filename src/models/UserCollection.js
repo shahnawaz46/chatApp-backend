@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    online: {
+        type: Boolean,
+        default: false
+    },
     image: {
         type: String,
         default: null
