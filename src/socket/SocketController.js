@@ -1,4 +1,5 @@
 const UserCollection = require("../models/UserCollection")
+const MessageCollection = require("../models/MessageCollection")
 
 
 exports.getLoginUserData = async (userId) => {
@@ -58,6 +59,39 @@ exports.addFriendInUserCollection = async (bothIds) => {
 
         // console.log(sender, receiver);
         return { sender, receiver }
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+exports.addMessagesToTheDatabase = async (key, messageDetail) => {
+    try {
+        const { from, to } = messageDetail
+        const isMessageAvailable = await MessageCollection.findOne({ key })
+
+        if (isMessageAvailable)
+            await MessageCollection.findOneAndUpdate({ key }, { $push: { "messages": messageDetail } })
+
+        else
+            await MessageCollection.create({ user1: from, user2: to, key, 'messages': messageDetail, })
+
+        return
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+exports.getMessagesfromTheDatabase = async (_id) => {
+    try {
+        const messages = await MessageCollection.find({ $or: [{ user1: _id }, { user2: _id }] }).select("key messages")
+
+        const messageObj = {}
+        messages.forEach((msg) => messageObj[msg.key] = msg.messages)
+
+        return messageObj
 
     } catch (error) {
         console.log(error)
