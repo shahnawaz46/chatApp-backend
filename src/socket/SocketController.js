@@ -65,6 +65,20 @@ exports.addFriendInUserCollection = async (bothIds) => {
     }
 }
 
+exports.removeFriendFromUserCollection = async ({ loginId, removerId }) => {
+    try {
+        const sender = await UserCollection.findByIdAndUpdate(loginId, { $pull: { 'friends': removerId } },
+            { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
+
+        const remover = await UserCollection.findByIdAndUpdate(removerId, { $pull: { 'friends': loginId } },
+            { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
+
+        return { sender, remover }
+
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 exports.addMessagesToTheDatabase = async (key, messageDetail) => {
     try {
@@ -92,6 +106,15 @@ exports.getMessagesfromTheDatabase = async (_id) => {
         messages.forEach((msg) => messageObj[msg.key] = msg.messages)
 
         return messageObj
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+exports.removeMessageFromTheDatabase = async (key) => {
+    try {
+        await MessageCollection.findOneAndDelete({ key })
 
     } catch (error) {
         console.log(error)

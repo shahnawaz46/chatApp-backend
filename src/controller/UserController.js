@@ -126,3 +126,17 @@ exports.searchUser = async (req, res) => {
     }
 
 }
+
+exports.updateProfilePic = async (req, res) => {
+    try {
+        const updatedUser = await UserCollection.findByIdAndUpdate(req.body._id,
+            { image: req.file.filename },
+            { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
+
+        return res.status(200).json({ message: "Image Uploaded Successfully", updatedUser })
+
+    } catch (err) {
+        // console.log(err);
+        return res.status(500).json({ error: "Internal Server Error", err })
+    }
+}

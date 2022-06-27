@@ -3,7 +3,9 @@ const { upadateNotificationInUserCollection,
     getLoginUserData,
     userLogout,
     addMessagesToTheDatabase,
-    getMessagesfromTheDatabase } = require('./SocketController');
+    getMessagesfromTheDatabase,
+    removeFriendFromUserCollection,
+    removeMessageFromTheDatabase } = require('./SocketController');
 
 
 let allOnlineUser = {}
@@ -11,12 +13,8 @@ let allOnlineUser = {}
 const socketConnection = (io) => {
 
     io.on("connection", (socket) => {
-        // console.log(`someone connected ${socket.id}`);
-        // console.log(allOnlineUser);
 
         socket.on("disconnect", () => {
-            // console.log(`${socket.id} offline`);
-
             for (var key in allOnlineUser) {
                 if (allOnlineUser[key] === socket.id) {
                     delete allOnlineUser[key]
@@ -26,7 +24,6 @@ const socketConnection = (io) => {
         })
 
         socket.on("online_user", async (userId) => {
-            // console.log(`${socket.id} online`);
             allOnlineUser[userId] = socket.id
 
             const onlineUser = await getLoginUserData(userId)
@@ -42,7 +39,6 @@ const socketConnection = (io) => {
 
         socket.on("offline_user", async (userId) => {
             const offlineUser = await userLogout(userId)
-            // console.log(offlineUser);
 
             offlineUser?.friends.forEach(async (friend) => {
                 if (friend.online) {
@@ -76,12 +72,23 @@ const socketConnection = (io) => {
         })
 
 
+        socket.on("remove_friend", async (bothIds) => {
+            const updatedUser = await removeFriendFromUserCollection(bothIds)
+
+            const key = [bothIds.loginId, bothIds.removerId].sort().join('-')
+
+            io.to(allOnlineUser[bothIds.loginId]).emit("friend_remove", { updatedUser: updatedUser.sender, key })
+
+            io.to(allOnlineUser[bothIds.removerId]).emit("friend_remove", { updatedUser: updatedUser.remover, key })
+
+
+            await removeMessageFromTheDatabase(key)
+        })
+
         // messages start from here
         socket.on("send_message", async (messageDetail) => {
-            // console.log(data.from, data.to, data.message);
             const key = [messageDetail.from, messageDetail.to].sort().join('-')
 
-            // console.log(messages[key]);
             io.to(allOnlineUser[messageDetail.from]).to(allOnlineUser[messageDetail.to]).emit('receive_message', { key, msg: messageDetail })
 
             await addMessagesToTheDatabase(key, messageDetail)
@@ -89,7 +96,6 @@ const socketConnection = (io) => {
 
         socket.on("retrieve_message", async (_id) => {
             const messagesObj = await getMessagesfromTheDatabase(_id)
-            // console.log(messages);
 
             Object.keys(messagesObj).length > 0 && io.to(allOnlineUser[_id]).emit('retrieve_message_client', { messagesObj })
         })
