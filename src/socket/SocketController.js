@@ -82,16 +82,14 @@ exports.removeFriendFromUserCollection = async ({ loginId, removerId }) => {
 
 exports.addMessagesToTheDatabase = async (key, messageDetail) => {
     try {
-        const { from, to } = messageDetail
+        const { senderId, receiverId } = messageDetail
         const isMessageAvailable = await MessageCollection.findOne({ key })
 
         if (isMessageAvailable)
             await MessageCollection.findOneAndUpdate({ key }, { $push: { "messages": messageDetail } })
 
         else
-            await MessageCollection.create({ user1: from, user2: to, key, 'messages': messageDetail, })
-
-        return
+            await MessageCollection.create({ user1: senderId, user2: receiverId, key, 'messages': messageDetail, })
 
     } catch (error) {
         console.log(error);
@@ -115,6 +113,15 @@ exports.getMessagesfromTheDatabase = async (_id) => {
 exports.removeMessageFromTheDatabase = async (key) => {
     try {
         await MessageCollection.findOneAndDelete({ key })
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+exports.allMessagesSeen = async (key) => {
+    try {
+        await MessageCollection.findOneAndUpdate({ ...key }, { $set: { 'messages.$[].readBy.receiver': true } })
 
     } catch (error) {
         console.log(error)

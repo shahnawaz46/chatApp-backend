@@ -5,7 +5,8 @@ const { upadateNotificationInUserCollection,
     addMessagesToTheDatabase,
     getMessagesfromTheDatabase,
     removeFriendFromUserCollection,
-    removeMessageFromTheDatabase } = require('./SocketController');
+    removeMessageFromTheDatabase,
+    allMessagesSeen } = require('./SocketController');
 
 
 let allOnlineUser = {}
@@ -81,15 +82,19 @@ const socketConnection = (io) => {
 
             io.to(allOnlineUser[bothIds.removerId]).emit("friend_remove", { updatedUser: updatedUser.remover, key })
 
-
             await removeMessageFromTheDatabase(key)
         })
 
-        // messages start from here
-        socket.on("send_message", async (messageDetail) => {
-            const key = [messageDetail.from, messageDetail.to].sort().join('-')
 
-            io.to(allOnlineUser[messageDetail.from]).to(allOnlineUser[messageDetail.to]).emit('receive_message', { key, msg: messageDetail })
+        // messages start from here
+        socket.on("send_message", (messageDetail) => {
+            const key = [messageDetail.senderId, messageDetail.receiverId].sort().join('-')
+
+            io.to(allOnlineUser[messageDetail.receiverId]).emit('receive_message', { key, messageDetail })
+        })
+
+        socket.on("store_message", async (messageDetail) => {
+            const key = [messageDetail.senderId, messageDetail.receiverId].sort().join('-')
 
             await addMessagesToTheDatabase(key, messageDetail)
         })
@@ -98,6 +103,10 @@ const socketConnection = (io) => {
             const messagesObj = await getMessagesfromTheDatabase(_id)
 
             Object.keys(messagesObj).length > 0 && io.to(allOnlineUser[_id]).emit('retrieve_message_client', { messagesObj })
+        })
+
+        socket.on("messages_seen", async (key) => {
+            await allMessagesSeen(key)
         })
     })
 }

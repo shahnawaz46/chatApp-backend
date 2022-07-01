@@ -16,11 +16,11 @@ const messageSchema = new mongoose.Schema({
     },
     messages: [
         {
-            from: {
+            senderId: {
                 type: String,
                 required: true
             },
-            to: {
+            receiverId: {
                 type: String,
                 required: true
             },
@@ -31,6 +31,10 @@ const messageSchema = new mongoose.Schema({
             time: {
                 type: Date,
                 required: true
+            },
+            readBy: {
+                sender: { type: Boolean, default: true },
+                receiver: { type: Boolean, default: false }
             }
         }
     ]
