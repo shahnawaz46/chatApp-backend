@@ -90,11 +90,13 @@ const socketConnection = (io) => {
         socket.on("send_message", (messageDetail) => {
             const key = [messageDetail.senderId, messageDetail.receiverId].sort().join('-')
 
-            io.to(allOnlineUser[messageDetail.receiverId]).emit('receive_message', { key, messageDetail })
+            io.to(allOnlineUser[messageDetail.receiverId]).emit('receive_message', messageDetail)
         })
 
         socket.on("store_message", async (messageDetail) => {
             const key = [messageDetail.senderId, messageDetail.receiverId].sort().join('-')
+
+            io.to(allOnlineUser[messageDetail.senderId]).to(allOnlineUser[messageDetail.receiverId]).emit('store_message_in_client', { key, messageDetail })
 
             await addMessagesToTheDatabase(key, messageDetail)
         })
@@ -105,7 +107,11 @@ const socketConnection = (io) => {
             Object.keys(messagesObj).length > 0 && io.to(allOnlineUser[_id]).emit('retrieve_message_client', { messagesObj })
         })
 
-        socket.on("messages_seen", async (key) => {
+        socket.on("messages_seen", async ({ key, messages }) => {
+            const [id_1, id_2] = key.split('-')
+
+            io.to(allOnlineUser[id_1]).to(allOnlineUser[id_2]).emit("message_seen_client", { key, messages })
+
             await allMessagesSeen(key)
         })
     })
