@@ -87,10 +87,16 @@ const socketConnection = (io) => {
 
 
         // messages start from here
-        socket.on("send_message", (messageDetail) => {
+        socket.on("send_message", async (messageDetail) => {
             const key = [messageDetail.senderId, messageDetail.receiverId].sort().join('-')
 
-            io.to(allOnlineUser[messageDetail.receiverId]).emit('receive_message', messageDetail)
+            if (allOnlineUser[messageDetail.receiverId])
+                io.to(allOnlineUser[messageDetail.receiverId]).emit('receive_message', messageDetail)
+
+            else {
+                io.to(allOnlineUser[messageDetail.senderId]).emit("when_receiver_offline", { key, messageDetail })
+                await addMessagesToTheDatabase(key, messageDetail)
+            }
         })
 
         socket.on("store_message", async (messageDetail) => {

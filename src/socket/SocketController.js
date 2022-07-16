@@ -121,7 +121,7 @@ exports.removeMessageFromTheDatabase = async (key) => {
 
 exports.allMessagesSeen = async (key) => {
     try {
-        await MessageCollection.findOneAndUpdate({ ...key }, { $set: { 'messages.$[].readBy.receiver': true } })
+        await MessageCollection.findOneAndUpdate({ key }, { $set: { 'messages.$[].receiverSeen': true } })
 
     } catch (error) {
         console.log(error)

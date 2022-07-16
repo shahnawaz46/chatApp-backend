@@ -32,9 +32,9 @@ const messageSchema = new mongoose.Schema({
                 type: Date,
                 required: true
             },
-            readBy: {
-                sender: { type: Boolean, default: true },
-                receiver: { type: Boolean, default: false }
+            receiverSeen: {
+                type: Boolean,
+                default: false
             }
         }
     ]
