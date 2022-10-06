@@ -6,6 +6,13 @@ exports.getLoginUserData = async (userId) => {
     try {
         let loginUser = await UserCollection.findById(userId).select('name image friends number about notifications online').populate('friends', 'name image number about online')
 
+        if (loginUser.online)
+            return loginUser
+
+        loginUser.online = true
+        await loginUser.save()
+        
+        // console.log("else", loginUser.online);
         return loginUser
 
     } catch (err) {

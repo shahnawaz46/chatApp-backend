@@ -60,8 +60,8 @@ exports.userLogin = async (req, res) => {
             return res.status(401).json({ error: "Invalid Credential" })
         }
 
-        isUserAlreadyExist.online = true
-        await isUserAlreadyExist.save()
+        // isUserAlreadyExist.online = true
+        // await isUserAlreadyExist.save()
 
         return res.status(200).json({ message: "Login Successfully", userId: isUserAlreadyExist._id })
 
@@ -96,7 +96,7 @@ exports.optVerfication = async (req, res) => {
         }
 
         isUserExist.isEmailVerified = true
-        isUserExist.online = true
+        // isUserExist.online = true
         await isUserExist.save()
 
         await OtpCollection.findByIdAndDelete(isOtpAvailable._id)
