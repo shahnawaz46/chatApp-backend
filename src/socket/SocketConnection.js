@@ -8,10 +8,11 @@ const {
   removeFriendFromUserCollection,
   removeMessageFromTheDatabase,
   allMessagesSeen,
+  deleteSingleMessageFromDatabase,
 } = require("./SocketController");
 
 
-const checkUserGoOfflineOrRefreshThePage = (id,io) => {
+const checkUserGoOfflineOrRefreshThePage = (id, io) => {
 
   setTimeout(async () => {
     for (let key in allOnlineUser) {
@@ -138,6 +139,13 @@ const socketConnection = (io) => {
 
       await allMessagesSeen(key);
     });
+
+    socket.on("delete_message", async (id) => {
+      const key = [id.senderId, id.receiverId].sort().join("-")
+ 
+      const messages = await deleteSingleMessageFromDatabase(id.messageId, key)
+      io.to(allOnlineUser[id.senderId]).to(allOnlineUser[id.receiverId]).emit('message_seen_client', {key, messages:messages.messages})
+    })
   });
 };
 

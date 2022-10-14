@@ -11,7 +11,7 @@ exports.getLoginUserData = async (userId) => {
 
         loginUser.online = true
         await loginUser.save()
-        
+
         // console.log("else", loginUser.online);
         return loginUser
 
@@ -129,6 +129,16 @@ exports.removeMessageFromTheDatabase = async (key) => {
 exports.allMessagesSeen = async (key) => {
     try {
         await MessageCollection.findOneAndUpdate({ key }, { $set: { 'messages.$[].receiverSeen': true } })
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+exports.deleteSingleMessageFromDatabase = async (messageId, key) => {
+    try {
+        const messages = await MessageCollection.findOneAndUpdate({ key }, { $pull: { "messages": { messageId } } }, { new: true }).select("messages")
+        return messages
 
     } catch (error) {
         console.log(error)

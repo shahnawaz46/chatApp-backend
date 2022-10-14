@@ -25,6 +25,9 @@ const messageSchema = new mongoose.Schema({
                 required: true
             },
             message: {
+                type: String
+            },
+            messageId: {
                 type: String,
                 required: true
             },
@@ -35,6 +38,9 @@ const messageSchema = new mongoose.Schema({
             receiverSeen: {
                 type: Boolean,
                 default: false
+            },
+            mediaURL: {
+                type: String,
             }
         }
     ]
