@@ -117,7 +117,7 @@ exports.searchUser = async (req, res) => {
         const { query, id, friends } = req.body
 
         // $ne stand for not equal and $nin stand for not in array 
-        const allSearchUser = await UserCollection.find({ name: { $regex: query }, $or: [{ _id: { $ne: id, $nin: friends } }] }).select('name image number about notifications')
+        const allSearchUser = await UserCollection.find({ name: { "$regex": query, "$options": "i" }, $or: [{ _id: { $ne: id, $nin: friends } }] }).select('name image number about notifications')
         return res.status(200).json({ allSearchUser })
 
     } catch (err) {
@@ -130,13 +130,26 @@ exports.searchUser = async (req, res) => {
 exports.updateProfilePic = async (req, res) => {
     try {
         const updatedUser = await UserCollection.findByIdAndUpdate(req.body._id,
-            { image: req.file.filename },
+            { image: req.body.imageUrl },
             { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
 
         return res.status(200).json({ message: "Image Uploaded Successfully", updatedUser })
 
     } catch (err) {
         // console.log(err);
+        return res.status(500).json({ error: "Internal Server Error", err })
+    }
+}
+
+
+exports.updateStatus = async (req, res) => {
+    try {
+        const { _id, status } = req.body
+        const updatedUser = await UserCollection.findByIdAndUpdate(_id, { about: status }, { new: true }).select('name image friends number about notifications online').populate('friends', 'name image number about online')
+
+        return res.status(200).json({ message: "Status update Successfully", updatedUser })
+
+    } catch (error) {
         return res.status(500).json({ error: "Internal Server Error", err })
     }
 }
