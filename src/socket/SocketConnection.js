@@ -27,6 +27,9 @@ const checkUserGoOfflineOrRefreshThePage = (id, io) => {
             io.to(allOnlineUser[friend._id]).emit("user_online", onlineUser);
           }
         });
+
+        delete allOnlineUser[key]
+
         break;
       }
     }
@@ -38,14 +41,17 @@ let allOnlineUser = {};
 
 const socketConnection = (io) => {
 
+
   io.on("connection", (socket) => {
+    console.log(allOnlineUser);
 
     socket.on("disconnect", async () => {
-
       checkUserGoOfflineOrRefreshThePage(socket.id, io)
     });
 
     socket.on("online_user", async (userId) => {
+      console.log("user online");
+
       allOnlineUser[userId] = socket.id;
 
       const onlineUser = await getLoginUserData(userId);
@@ -69,6 +75,8 @@ const socketConnection = (io) => {
           io.to(allOnlineUser[friend._id]).emit("user_online", onlineUser);
         }
       });
+
+      delete allOnlineUser[userId]
     });
 
     socket.on("friend_request_send", async (request) => {
@@ -108,11 +116,15 @@ const socketConnection = (io) => {
     // messages start from here
     socket.on("send_message", async (messageDetail) => {
       const key = [messageDetail.senderId, messageDetail.receiverId].sort().join("-");
+      console.log(allOnlineUser[messageDetail.receiverId]);
 
-      if (allOnlineUser[messageDetail.receiverId])
+      if (allOnlineUser[messageDetail.receiverId]) {
+        console.log("user online");
         io.to(allOnlineUser[messageDetail.receiverId]).emit("receive_message", messageDetail);
+      }
 
       else {
+        console.log("user offline");
         io.to(allOnlineUser[messageDetail.senderId]).emit("when_receiver_offline", { key, messageDetail });
         await addMessagesToTheDatabase(key, messageDetail);
       }
@@ -142,9 +154,9 @@ const socketConnection = (io) => {
 
     socket.on("delete_message", async (id) => {
       const key = [id.senderId, id.receiverId].sort().join("-")
- 
+
       const messages = await deleteSingleMessageFromDatabase(id.messageId, key)
-      io.to(allOnlineUser[id.senderId]).to(allOnlineUser[id.receiverId]).emit('message_seen_client', {key, messages:messages.messages})
+      io.to(allOnlineUser[id.senderId]).to(allOnlineUser[id.receiverId]).emit('message_seen_client', { key, messages: messages.messages })
     })
   });
 };
